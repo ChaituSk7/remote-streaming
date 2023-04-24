@@ -1,6 +1,6 @@
 #include "header.h"
 
-static void callback_message (GstBus *bus, GstMessage *msg, HostCustomData *data) {
+static void callback_message (GstBus *bus, GstMessage *msg, RemoteMP4Data *data) {
 
   switch (GST_MESSAGE_TYPE(msg)) {
     case GST_MESSAGE_ERROR: {
@@ -33,10 +33,10 @@ static void callback_message (GstBus *bus, GstMessage *msg, HostCustomData *data
   }
 }
 
-int remotehost_pipeline (int argc, char *argv[]) {
+int hostwebm_pipeline (int argc, char *argv[]) {
     GstBus *bus;
     GstStateChangeReturn ret;
-    RemoteCustomData remote_host;
+    RemoteMP4Data remote_host;
     GstCaps *caps = NULL;
 
     /* Initialize RemoteHost structure */
@@ -48,14 +48,14 @@ int remotehost_pipeline (int argc, char *argv[]) {
     /* Initialize gstremer elements */
     remote_host.pipeline = gst_pipeline_new("Remote-host");
     remote_host.udp_source = gst_element_factory_make("udpsrc", NULL);
-    remote_host.caps_filter = gst_element_factory_make("capsfilter", NULL);
+    // remote_host.caps_filter = gst_element_factory_make("capsfilter", NULL);
     remote_host.rtp_depay = gst_element_factory_make("rtph264depay", NULL);
     remote_host.video_queue = gst_element_factory_make("queue", NULL);
     remote_host.video_decoder = gst_element_factory_make("avdec_h264", NULL);
     remote_host.video_sink = gst_element_factory_make("autovideosink", NULL);
 
     /* Check if elements are created */ 
-    if (!remote_host.pipeline || !remote_host.udp_source || !remote_host.caps_filter || 
+    if (!remote_host.pipeline || !remote_host.udp_source || /* !remote_host.caps_filter || */ 
         !remote_host.rtp_depay || !remote_host.video_queue || !remote_host.video_decoder ||
         !remote_host.video_sink) {
             g_printerr ("Not all elements could be created.\n");
@@ -63,27 +63,28 @@ int remotehost_pipeline (int argc, char *argv[]) {
         }
     
     /* Add elements to bin */ 
-    gst_bin_add_many(GST_BIN(remote_host.pipeline), remote_host.udp_source, remote_host.caps_filter,
+    gst_bin_add_many(GST_BIN(remote_host.pipeline), remote_host.udp_source, /* remote_host.caps_filter, */
                     remote_host.rtp_depay, remote_host.video_queue, remote_host.video_decoder, 
                     remote_host.video_sink, NULL);
-                    
+
     /* Set the Capability */
-    caps = gst_caps_new_simple("application/x-rtp", "encoding-name", "H264",
-                                "payload", 96, NULL);
+    caps = gst_caps_new_simple("application/x-rtp",
+                                "encoding-name", G_TYPE_STRING, "H264",
+                                "payload", G_TYPE_INT, 96, NULL);
     
     /* Set the element properties */
-    g_object_set(G_OBJECT(remote_host.caps_filter), "caps", caps, NULL);
-    g_object_set(G_OBJECT(remote_host.udp_source), "port", 5000, NULL);
+    g_object_set(G_OBJECT(remote_host.udp_source), "caps", caps,
+                                                    "port", 5000, NULL);    
 
     /* Link the elements */
-    if (gst_element_link_many(remote_host.udp_source, remote_host.caps_filter, remote_host.rtp_depay,
+    if (gst_element_link_many(remote_host.udp_source, /* remote_host.caps_filter,*/ remote_host.rtp_depay,
         remote_host.video_queue, remote_host.video_decoder, remote_host.video_sink, NULL) != TRUE) {
         g_printerr("Udpsource to sink elements not linked.\n");
         exit(EXIT_FAILURE);
     }
 
     /* Set the pipeline to playing state */
-    ret = gst_element_set_state(remote_host.pipeline, GST_STATE_NULL);
+    ret = gst_element_set_state(remote_host.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_printerr("Colud not set the pipeline to playing state.\n");
         exit(EXIT_FAILURE);
@@ -106,6 +107,7 @@ int remotehost_pipeline (int argc, char *argv[]) {
     gst_object_unref(remote_host.pipeline);
     gst_object_unref(bus);
     g_main_loop_unref(remote_host.loop);
+    gst_caps_unref(caps);
 
     return 0;
 }
