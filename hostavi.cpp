@@ -117,12 +117,12 @@ int hostavi_pipeline (int argc, char *argv[]) {
     
     g_object_set(G_OBJECT(avi.source), "location", "/home/ee212798/Downloads/sample.avi", NULL);
     g_object_set(G_OBJECT(avi.video_encoder), "deadline", 1, NULL);
-    g_object_set(G_OBJECT(avi.udp_video_sink), "host", "192.168.43.158",
+    g_object_set(G_OBJECT(avi.udp_video_sink), "host", "10.1.1137.49",
                                                 "port", 5000,
-                                                "clients", "192.168.43.158:5000,10.1.136.123:5000", NULL);
+                                                "clients", "10.1.138.194:5000,10.1.136.123:5000", NULL);
     g_object_set(G_OBJECT(avi.udp_audio_sink), "host", "10.1.137.49",
                                                 "port", 5001,
-                                                "clients", "192.168.43.158:5001,10.1.136.123:5001", NULL);
+                                                "clients", "10.1.138.194:5001,10.1.136.123:5001", NULL);
 
     if (gst_element_link(avi.source, avi.demux) != TRUE) {
         g_printerr("Source and demuxer not linked.\n");
