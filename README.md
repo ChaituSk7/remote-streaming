@@ -19,3 +19,5 @@ Write Gstreamer application which will play audio-video data on remote machine.
 - Do not use playbin/decodebin in pipepline.
 
 - take user inputs from keyboard (play/pause/seek/flush/query for position, duration)
+- change the volume of a pipeline
+- Generate a thumbnail from a gst video source
