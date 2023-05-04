@@ -1,40 +1,15 @@
 #include "header.h"
+#include "keyboardhandler.h"
+#include "msghandler.h"
 
-static void callback_message (GstBus *bus, GstMessage *msg, HostMP3Data *data) {
-
-  switch (GST_MESSAGE_TYPE(msg)) {
-    case GST_MESSAGE_ERROR: {
-        GError *err;
-        gchar *debug;
-        gst_message_parse_error (msg, &err, &debug);
-        g_print ("Error: %s\n", err->message);
-        g_error_free (err);
-        g_free (debug);
-        g_main_loop_quit (data->loop);
-    }
-    break;
-    case GST_MESSAGE_EOS: {
-        g_print("Reached End of Stream.\n");
-        g_main_loop_quit (data->loop);
-    }
-     break;
-    case GST_MESSAGE_STATE_CHANGED: {
-      if (GST_MESSAGE_SRC(msg) == GST_OBJECT(data->pipeline)) {
-        GstState old_state, new_state, pending_state;
-        gst_message_parse_state_changed(msg, &old_state, &new_state, &pending_state);
-        g_print("Pipeline state changed from '%s' to '%s'\n", gst_element_state_get_name(old_state), gst_element_state_get_name(new_state));
-      }
-    }
-    break;
-    default: 
-    break;
-  }
-}
-
-int hostmp3_pipeline (int argc, char *argv[]) {
+int hostmp3_pipeline (char *argv) {
     GstStateChangeReturn ret;
     GstBus *bus;
     HostMP3Data mp3;
+    GIOChannel *io_stdin;
+    CustomData data;
+
+    memset(&data, 0, sizeof(data));
 
     /* Initialize Gstreamer */
     gst_init (NULL, NULL);
@@ -62,7 +37,7 @@ int hostmp3_pipeline (int argc, char *argv[]) {
                         mp3.audio_convert, mp3.audio_encoder, mp3.audio_payloader, mp3.audio_udp_sink, NULL);
 
     /* Set the element properties */        
-    g_object_set(G_OBJECT(mp3.filesrc), "location", "/home/ee212798/Downloads/sample.mp3", NULL);
+    g_object_set(G_OBJECT(mp3.filesrc), "location", argv, NULL);
 
     g_object_set(G_OBJECT(mp3.audio_udp_sink), "host", "10.1.137.49",
                                                 "port", 5000,
@@ -87,13 +62,30 @@ int hostmp3_pipeline (int argc, char *argv[]) {
     bus = gst_element_get_bus(mp3.pipeline);
     gst_bus_add_signal_watch(bus);
 
-    /* Connect signal messages that came from bus */
-    g_signal_connect(bus, "message", G_CALLBACK(callback_message), &mp3);
-
     /* Start the Main Loop event */
     mp3.loop = g_main_loop_new (NULL, FALSE);
+
+    /* Create Struct for Key Board Handler */
+    data.pipeline = mp3.pipeline;
+    data.loop     = mp3.loop;
+    data.path = argv;
+
+    /* Connect signal messages that came from bus */
+    g_signal_connect(bus, "message", G_CALLBACK(msg_handle), &data);
+
+    g_print("\n\nPress 'k' to see a list of keyboard shortcuts\n\n");
+
+    /* Set up IO handler*/
+    #ifdef G_OS_WIN32										
+      io_stdin = g_io_channel_win32_new_fd (fileno(stdin));
+    #else
+      io_stdin = g_io_channel_unix_new(fileno(stdin));		
+    #endif
+        guint id = g_io_add_watch (io_stdin, G_IO_IN, (GIOFunc) handle_keyboard, &data);
+    
     g_main_loop_run (mp3.loop);
 
+    g_source_remove(id);
     gst_element_set_state(mp3.pipeline, GST_STATE_NULL);
     gst_object_unref(mp3.pipeline);
     gst_object_unref(bus);

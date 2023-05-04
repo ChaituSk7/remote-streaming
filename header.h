@@ -1,10 +1,8 @@
 #ifndef HEADER_H
 #define HEADER_H
 #include <gst/gst.h>
-
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-#endif
+#include <gst/pbutils/pbutils.h>
+#include <string>
 
 typedef struct _HostMP4Data {
     GstElement *pipeline;
@@ -92,14 +90,16 @@ typedef struct _RemoteMP4Data {
 }RemoteMP4Data;
 
 
-extern int localhost_pipeline (int, char *[]);
+extern int localhost_pipeline (char *);
 
-extern int hostmp3_pipeline (int, char *[]);
+extern int hostmp3_pipeline (char *);
 
-extern int hostwebm_pipeline (int, char *[]);
+extern int hostwebm_pipeline (char *);
 
-extern int hostavi_pipeline (int, char *[]);
+extern int hostavi_pipeline (char *);
 
-extern int remotehost_pipeline (int, char *[]);
+extern int remotehost_pipeline (char *);
+
+extern int metadata_fun (std::string);
 
 #endif

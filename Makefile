@@ -1,9 +1,9 @@
 CC = g++
-LIBS = `pkg-config --cflags --libs gstreamer-1.0`
+LIBS = `pkg-config --cflags --libs gstreamer-1.0 gstreamer-pbutils-1.0`
 
-all: hostsrc.o hostmp3.o hostwebm.o hostavi.o hostsrc.so hostmp3.so hostwebm.so hostavi.so exe
+all: hostsrc.o hostmp3.o hostwebm.o hostavi.o metadata.o hostsrc.so hostmp3.so hostwebm.so hostavi.so metadata.so exe
 
-hostsrc.o:	hostsrc.cpp
+hostsrc.o: hostsrc.cpp
 	$(CC) -c hostsrc.cpp $(LIBS) -fPIC
 
 hostmp3.o:	hostmp3.cpp
@@ -14,6 +14,9 @@ hostwebm.o: hostwebm.cpp
 
 hostavi.o: hostavi.cpp
 	$(CC) -c hostavi.cpp $(LIBS) -fPIC
+
+metadata.o: metadata.cpp 
+	$(CC) -c metadata.cpp $(LIBS) -fPIC
 
 hostsrc.so:	hostsrc.o
 	$(CC) -shared -o libhostsrc.so hostsrc.o $(LIBS)
@@ -26,10 +29,12 @@ hostwebm.so: hostwebm.cpp
 
 hostavi.so: hostavi.cpp
 	$(CC) -shared -o libhostavi.so hostavi.o $(LIBS)
-exe: main.cpp 
-	$(CC) -o exe main.cpp -lhostsrc -lhostmp3 -lhostwebm -lhostavi $(LIBS) -I . -L .
 
-run: exe
-	./exe
+metadata.so: metadata.cpp 
+	$(CC) -shared -o libmetadata.so metadata.o $(LIBS)
+
+exe: main.cpp 
+	$(CC) -o exe main.cpp -lhostsrc -lhostmp3 -lhostwebm -lhostavi -lmetadata $(LIBS) -I . -L .
+
 clean:
 	rm -rf *.o *.so exe
