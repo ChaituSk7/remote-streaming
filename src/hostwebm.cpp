@@ -67,6 +67,7 @@ int hostwebm_pipeline (char *argv) {
     webm.audio_queue = gst_element_factory_make("queue", NULL);
     webm.audio_decoder = gst_element_factory_make("vorbisdec", NULL);
     webm.audio_convert = gst_element_factory_make("audioconvert", NULL);
+    webm.audio_volume = gst_element_factory_make("volume", NULL);
     webm.audio_encoder = gst_element_factory_make("opusenc", NULL);
     webm.audio_payload = gst_element_factory_make("rtpopuspay", NULL);
     webm.udp_audio_sink = gst_element_factory_make("udpsink", NULL);
@@ -75,15 +76,15 @@ int hostwebm_pipeline (char *argv) {
     if (!webm.pipeline || !webm.source || !webm.demux || !webm.video_queue || !webm.video_decoder ||
         !webm.video_convert || !webm.video_encoder || !webm.video_payload || !webm.video_payload ||
         !webm.udp_video_sink || !webm.audio_queue || !webm.audio_decoder || !webm.audio_convert ||
-        !webm.audio_encoder || !webm.audio_payload || !webm.udp_audio_sink) {
+        !webm.audio_volume ||!webm.audio_encoder || !webm.audio_payload || !webm.udp_audio_sink) {
             g_printerr("Not all elements could be created\n");
         }
 
     /* Add elements to the Bin */
     gst_bin_add_many(GST_BIN(webm.pipeline), webm.source, webm.demux, webm.video_queue, webm.video_decoder,
                     webm.video_convert, webm.video_encoder, webm.video_payload, webm.udp_video_sink,
-                    webm.audio_queue, webm.audio_decoder, webm.audio_convert, webm.audio_encoder,
-                    webm.audio_payload, webm.udp_audio_sink, NULL);
+                    webm.audio_queue, webm.audio_decoder, webm.audio_convert, webm.audio_volume, 
+                    webm.audio_encoder, webm.audio_payload, webm.udp_audio_sink, NULL);
     
     /* Setting the element properties */
     g_object_set(G_OBJECT(webm.source), "location", argv, NULL);
@@ -107,7 +108,7 @@ int hostwebm_pipeline (char *argv) {
                     exit(EXIT_FAILURE);
                 }
     
-    if (gst_element_link_many(webm.audio_queue, webm.audio_decoder, webm.audio_convert,
+    if (gst_element_link_many(webm.audio_queue, webm.audio_decoder, webm.audio_convert, webm.audio_volume,
                 webm.audio_encoder, webm.audio_payload, webm.udp_audio_sink, NULL) != TRUE) {
                     g_printerr("Audio elements are not linked.\n");
                     exit(EXIT_FAILURE);
@@ -134,6 +135,7 @@ int hostwebm_pipeline (char *argv) {
     data.pipeline = webm.pipeline;
     data.loop     = webm.loop;
     data.path = argv;
+    data.volume = webm.audio_volume;
 
     /* Connect signal messages that came from bus */
     g_signal_connect(bus, "message", G_CALLBACK(msg_handle), &data);

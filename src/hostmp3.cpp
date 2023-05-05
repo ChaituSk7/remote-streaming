@@ -21,20 +21,21 @@ int hostmp3_pipeline (char *argv) {
     mp3.audio_decoder = gst_element_factory_make("avdec_mp3", NULL);
     mp3.audio_queue = gst_element_factory_make("queue", NULL);
     mp3.audio_convert = gst_element_factory_make("audioconvert", NULL);
+    mp3.audio_volume = gst_element_factory_make("volume", NULL);
     mp3.audio_encoder = gst_element_factory_make("lamemp3enc", NULL);
     mp3.audio_payloader = gst_element_factory_make("rtpmpapay", NULL);
     mp3.audio_udp_sink = gst_element_factory_make("udpsink", NULL);
 
     /* Check the elements are created or not */
     if (!mp3.pipeline || !mp3.filesrc || !mp3.audio_parse || !mp3.audio_decoder || !mp3.audio_queue ||
-        !mp3.audio_convert || !mp3.audio_encoder || !mp3.audio_payloader || !mp3.audio_udp_sink) {
+        !mp3.audio_convert || !mp3.audio_volume || !mp3.audio_encoder || !mp3.audio_payloader || !mp3.audio_udp_sink) {
             g_printerr("Not all the elements could be created.\n");
             exit(EXIT_FAILURE);
         }
     
     /* Add all the elements to the Bin */
     gst_bin_add_many(GST_BIN(mp3.pipeline), mp3.filesrc, mp3.audio_parse, mp3.audio_decoder, mp3.audio_queue,
-                        mp3.audio_convert, mp3.audio_encoder, mp3.audio_payloader, mp3.audio_udp_sink, NULL);
+                        mp3.audio_convert, mp3.audio_volume, mp3.audio_encoder, mp3.audio_payloader, mp3.audio_udp_sink, NULL);
 
     /* Set the element properties */        
     g_object_set(G_OBJECT(mp3.filesrc), "location", argv, NULL);
@@ -45,7 +46,7 @@ int hostmp3_pipeline (char *argv) {
 
     /* Link the elements */
     if (gst_element_link_many(mp3.filesrc, mp3.audio_parse, mp3.audio_decoder, mp3.audio_queue, 
-                            mp3.audio_convert, mp3.audio_encoder, mp3.audio_payloader, 
+                            mp3.audio_convert, mp3.audio_volume, mp3.audio_encoder, mp3.audio_payloader, 
                             mp3.audio_udp_sink, NULL) != TRUE) {
                                 g_printerr("Elements are not linked.\n");
                                 exit(EXIT_FAILURE);
@@ -69,6 +70,7 @@ int hostmp3_pipeline (char *argv) {
     data.pipeline = mp3.pipeline;
     data.loop     = mp3.loop;
     data.path = argv;
+    data.volume = mp3.audio_volume;
 
     /* Connect signal messages that came from bus */
     g_signal_connect(bus, "message", G_CALLBACK(msg_handle), &data);

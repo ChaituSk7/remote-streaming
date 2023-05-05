@@ -16,6 +16,7 @@ typedef struct _HostMP4Data {
     GstElement *udp_sink_video;
 
     GstElement *audio_decoder;
+    GstElement *audio_volume;
     GstElement *audio_queue;
     GstElement *audio_convert;
     GstElement *audio_resample;
@@ -31,6 +32,7 @@ typedef struct _HostMP3Data {
     GstElement *audio_parse;
     GstElement *audio_decoder;
     GstElement *audio_queue;
+    GstElement *audio_volume;
     GstElement *audio_convert;
     GstElement *audio_encoder;
     GstElement *audio_payloader;
@@ -50,6 +52,7 @@ typedef struct _HostWEBMData {
     GstElement *udp_video_sink;
     GstElement *audio_queue;
     GstElement *audio_decoder;
+    GstElement *audio_volume;
     GstElement *audio_convert;
     GstElement *audio_encoder;
     GstElement *audio_payload;
@@ -71,6 +74,7 @@ typedef struct _HostAVIData {
     GstElement *audio_queue;
     GstElement *audio_parser;
     GstElement *audio_decoder;
+    GstElement *audio_volume;
     GstElement *audio_convert;
     GstElement *audio_encoder;
     GstElement *audio_payload;

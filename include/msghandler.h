@@ -4,9 +4,6 @@
 #include "header.h"
 #include "keyboardhandler.h"
 
-/*
-	Message Handler for MP4 pipeline;
-*/
 
 gboolean msg_handle(GstBus *bus, GstMessage *msg, CustomData *data) {
 	switch(GST_MESSAGE_TYPE(msg))
@@ -54,20 +51,6 @@ gboolean msg_handle(GstBus *bus, GstMessage *msg, CustomData *data) {
 						g_print("\n Debug Info : %s\n",(debug)? debug : "None");
 						g_error_free(error);
 						g_free(debug);
-					}
-					break;
-					
-		case GST_MESSAGE_TAG:	{
-					/*	
-						GstTagList *tags = NULL;
-						gst_message_parse_tag(msg, &tags);
-						
-						// Write Code for Tags Handling here
-						gchar *string = gst_tag_list_to_string(tags);
-						g_print("%s\n",string);
-						g_free(string);
-						gst_tag_list_unref(tags);
-					*/
 					}
 					break;
 					

@@ -64,6 +64,7 @@ int hostavi_pipeline (char *argv) {
     avi.audio_parser = gst_element_factory_make("mpegaudioparse", NULL);
     avi.audio_decoder = gst_element_factory_make("avdec_mp3", NULL);
     avi.audio_convert = gst_element_factory_make("audioconvert", NULL);
+    avi.audio_volume = gst_element_factory_make("volume", NULL);
     avi.audio_encoder = gst_element_factory_make("opusenc", NULL);
     avi.audio_payload = gst_element_factory_make("rtpopuspay", NULL);
     avi.udp_audio_sink = gst_element_factory_make("udpsink", NULL);
@@ -71,15 +72,15 @@ int hostavi_pipeline (char *argv) {
     if (!avi.pipeline || !avi.source || !avi.demux || !avi.video_queue || !avi.video_parser || 
         !avi.video_decoder || !avi.video_convert || !avi.video_encoder || !avi.video_payload || 
         !avi.video_payload || !avi.udp_video_sink || !avi.audio_queue || !avi.audio_parser || 
-        !avi.audio_decoder ||  !avi.audio_convert || !avi.audio_encoder || !avi.audio_payload || 
-        !avi.udp_audio_sink) {
+        !avi.audio_decoder ||  !avi.audio_convert || !avi.audio_volume || !avi.audio_encoder || 
+        !avi.audio_payload || !avi.udp_audio_sink) {
             g_printerr("Not all elements could be created\n");
         }
 
     gst_bin_add_many(GST_BIN(avi.pipeline), avi.source, avi.demux, avi.video_queue, avi.video_parser,
                     avi.video_decoder, avi.video_convert, avi.video_encoder, avi.video_payload, 
                     avi.udp_video_sink, avi.audio_queue, avi.audio_parser, avi.audio_decoder, 
-                    avi.audio_convert, avi.audio_encoder, avi.audio_payload, avi.udp_audio_sink, NULL);
+                    avi.audio_convert, avi.audio_volume, avi.audio_encoder, avi.audio_payload, avi.udp_audio_sink, NULL);
     
     g_object_set(G_OBJECT(avi.source), "location", argv, NULL);
     g_object_set(G_OBJECT(avi.video_encoder), "deadline", 1, NULL);
@@ -102,7 +103,7 @@ int hostavi_pipeline (char *argv) {
                 }
     
     if (gst_element_link_many(avi.audio_queue, avi.audio_parser, avi.audio_decoder, avi.audio_convert,
-                avi.audio_encoder, avi.audio_payload, avi.udp_audio_sink, NULL) != TRUE) {
+                avi.audio_volume, avi.audio_encoder, avi.audio_payload, avi.udp_audio_sink, NULL) != TRUE) {
                     g_printerr("Audio elements are not linked.\n");
                     exit(EXIT_FAILURE);
                 }
@@ -126,6 +127,7 @@ int hostavi_pipeline (char *argv) {
     data.pipeline = avi.pipeline;
     data.loop     = avi.loop;
     data.path = argv;
+    data.volume = avi.audio_volume;
 
     /* Connect signal messages that came from bus */
     g_signal_connect(bus, "message", G_CALLBACK(msg_handle), &data);

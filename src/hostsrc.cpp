@@ -68,7 +68,7 @@ int localhost_pipeline(char *argv) {
     server_data.audio_queue = gst_element_factory_make("queue", NULL);
     server_data.audio_convert = gst_element_factory_make("audioconvert", NULL);
     server_data.audio_resample = gst_element_factory_make("audioresample", NULL);
-    // server_data.volume = gst_element_factory_make("volume", NULL);
+    server_data.audio_volume = gst_element_factory_make("volume", NULL);
     server_data.audio_encoder = gst_element_factory_make("opusenc", NULL);
     server_data.rtp_audio_payload = gst_element_factory_make("rtpopuspay", NULL);
     server_data.udp_sink_audio = gst_element_factory_make("udpsink", NULL);
@@ -83,7 +83,7 @@ int localhost_pipeline(char *argv) {
 
     /* Check the audio elements are created */
     if (!server_data.audio_decoder || !server_data.audio_queue || !server_data.audio_convert ||
-        !server_data.audio_resample || /* !server_data.volume  ||*/ !server_data.audio_encoder || !server_data.rtp_audio_payload ||
+        !server_data.audio_resample ||  !server_data.audio_volume  || !server_data.audio_encoder || !server_data.rtp_audio_payload ||
         !server_data.udp_sink_audio) {
         g_printerr("Not all audio elements could be created.\n");
         exit(EXIT_FAILURE);
@@ -93,7 +93,7 @@ int localhost_pipeline(char *argv) {
                      server_data.video_decoder, server_data.video_queue, server_data.video_convert,
                      server_data.video_encoder, server_data.rtp_payload, server_data.udp_sink_video,
                      server_data.audio_decoder, server_data.audio_queue, server_data.audio_convert,
-                     server_data.audio_resample, /* server_data.volume,*/ server_data.audio_encoder, server_data.rtp_audio_payload,
+                     server_data.audio_resample, server_data.audio_volume, server_data.audio_encoder, server_data.rtp_audio_payload,
                      server_data.udp_sink_audio, NULL);
 
     /* Set the element properties */
@@ -122,7 +122,7 @@ int localhost_pipeline(char *argv) {
     }
 
     if (gst_element_link_many(server_data.audio_queue, server_data.audio_decoder, server_data.audio_convert,
-                              server_data.audio_resample, /*server_data.volume,*/ server_data.audio_encoder, server_data.rtp_audio_payload,
+                              server_data.audio_resample, server_data.audio_volume, server_data.audio_encoder, server_data.rtp_audio_payload,
                               server_data.udp_sink_audio, NULL) != TRUE) {
         g_printerr("Decoder to audio udpsink not linked.\n");
         exit(EXIT_FAILURE);
@@ -148,7 +148,8 @@ int localhost_pipeline(char *argv) {
     /* Create Struct for Key Board Handler */
     data.pipeline = server_data.pipeline;
     data.loop     = server_data.loop;
-    data.path = argv;   
+    data.path = argv;
+    data.volume = server_data.audio_volume;   
 
     /* Connect signal messages that came from bus */
     g_signal_connect(bus, "message", G_CALLBACK(msg_handle), &data);

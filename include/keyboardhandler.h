@@ -7,13 +7,14 @@
 typedef struct _Customdata {
 	std::string path;
 	GstElement *pipeline;
+	GstElement *volume;
 	GMainLoop  *loop;
 	
 }CustomData;
 
 void handle_menu(CustomData *data, gchar input)
 {
-	  	
+	double current_volume;	
 	if(input == 'p'){		
 	  	
 	  	/* Change State To PLAYING */
@@ -61,6 +62,8 @@ void handle_menu(CustomData *data, gchar input)
 			"     c         :  Seek 10 sec forward\n"
             "     t         :  Current position of media\n"
 			"     m         :  Print metadata\n" 
+			"     v         :  increase volume\n"
+			"     u         :  decrease volume\n"
             "     q         :  quit\n");
 	  		
 	}else if(input == 'n'){
@@ -79,9 +82,25 @@ void handle_menu(CustomData *data, gchar input)
 	}else if(input == 'm'){
 	  	metadata_fun(data->path);
 	}	
+
 	else if (input == 'v') { 
-	  	
+	  	g_object_get(G_OBJECT(data->volume), "volume", &current_volume, NULL);
+      	g_object_set(G_OBJECT(data->volume), "volume", std::min(current_volume + 0.5, 7.0), NULL);
+    	if(current_volume == 7)
+			std::cout << "Reach to maximum volume\n"<< std::endl;
+		std::cout << "Volume: " << current_volume << std::endl;
+	}
+	else if (input == 'u') {
+		g_object_get(G_OBJECT(data->volume), "volume", &current_volume, NULL);
+    	if (current_volume !=  0)
+      		g_object_set(G_OBJECT(data->volume), "volume", std::max(current_volume - 0.5, 0.0), NULL);
+		else
+			std::cout << "mute state" << std::endl;
+		std::cout << "Volume:" << current_volume << std::endl;
 	}	
+	else {
+		
+	}
 }
 
 
