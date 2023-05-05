@@ -106,4 +106,6 @@ extern int remotehost_pipeline (char *);
 
 extern int metadata_fun (std::string);
 
+extern GstPadProbeReturn my_probe_callback(GstPad *, GstPadProbeInfo *, gpointer);
+
 #endif

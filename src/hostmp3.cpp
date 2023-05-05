@@ -1,6 +1,5 @@
 #include "header.h"
 #include "keyboardhandler.h"
-#include "msghandler.h"
 
 int hostmp3_pipeline (char *argv) {
     GstStateChangeReturn ret;
@@ -51,7 +50,12 @@ int hostmp3_pipeline (char *argv) {
                                 g_printerr("Elements are not linked.\n");
                                 exit(EXIT_FAILURE);
                             }
+
+    GstPad *sinkpad_audio = gst_element_get_static_pad(mp3.audio_udp_sink, "sink");
     
+    /* Call pad add probe function */
+	gst_pad_add_probe(sinkpad_audio, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, my_probe_callback, NULL, NULL);
+
     /* Set the pipeline for playing State */
     ret = gst_element_set_state(mp3.pipeline, GST_STATE_PLAYING);
     

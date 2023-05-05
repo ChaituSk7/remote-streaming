@@ -1,5 +1,4 @@
 #include "header.h"
-#include "msghandler.h"
 #include "keyboardhandler.h"
 
 static void host_pad_handler(GstElement * src, GstPad * pad, HostMP4Data * data)
@@ -128,6 +127,14 @@ int localhost_pipeline(char *argv) {
         exit(EXIT_FAILURE);
     }
 
+    GstPad *sinkpad_audio = gst_element_get_static_pad(server_data.udp_sink_audio, "sink");
+    GstPad *sinkpad_video = gst_element_get_static_pad(server_data.udp_sink_video, "sink");
+    
+    /* Call pad add probe function */
+	gst_pad_add_probe(sinkpad_audio, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, my_probe_callback, NULL, NULL);
+	gst_pad_add_probe(sinkpad_video, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, my_probe_callback, NULL, NULL);
+		
+
     /* Connect pad-added signal */
     g_signal_connect(server_data.demuxer, "pad-added", G_CALLBACK(host_pad_handler), &server_data);
 
@@ -149,7 +156,7 @@ int localhost_pipeline(char *argv) {
     data.pipeline = server_data.pipeline;
     data.loop     = server_data.loop;
     data.path = argv;
-    data.volume = server_data.audio_volume;   
+    data.volume = server_data.audio_volume;  
 
     /* Connect signal messages that came from bus */
     g_signal_connect(bus, "message", G_CALLBACK(msg_handle), &data);

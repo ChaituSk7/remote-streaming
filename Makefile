@@ -3,10 +3,10 @@ path = src
 header = ./include/
 LIBS = `pkg-config --cflags --libs gstreamer-1.0 gstreamer-pbutils-1.0`
 
-all: hostsrc.o hostmp3.o hostwebm.o hostavi.o metadata.o hostsrc.so hostmp3.so hostwebm.so hostavi.so metadata.so exe
+all: hostmp4.o hostmp3.o hostwebm.o hostavi.o metadata.o padprobe.o keyboardhandler.o hostmp4.so hostmp3.so hostwebm.so hostavi.so metadata.so padprobe.so keyboard.so exe
 
-hostsrc.o: $(path)/hostsrc.cpp
-	$(CC) -c $(path)/hostsrc.cpp $(LIBS) -fPIC -I $(header)
+hostmp4.o: $(path)/hostmp4.cpp
+	$(CC) -c $(path)/hostmp4.cpp $(LIBS) -fPIC -I $(header)
 
 hostmp3.o:	$(path)/hostmp3.cpp
 	$(CC) -c $(path)/hostmp3.cpp $(LIBS) -fPIC -I $(header)
@@ -20,8 +20,14 @@ hostavi.o: $(path)/hostavi.cpp
 metadata.o: $(path)/metadata.cpp 
 	$(CC) -c $(path)/metadata.cpp $(LIBS) -fPIC -I $(header)
 
-hostsrc.so:	hostsrc.o
-	$(CC) -shared -o libhostsrc.so hostsrc.o $(LIBS)
+padprobe.o: $(path)/padprobe.cpp 
+	$(CC) -c $(path)/padprobe.cpp $(LIBS) -fPIC -I $(header)
+
+keyboardhandler.o: $(path)/keyboardhandler.cpp
+	$(CC) -c $(path)/keyboardhandler.cpp $(LIBS) -fPIC -I $(header)
+
+hostmp4.so:	hostmp4.o
+	$(CC) -shared -o libhostmp4.so hostmp4.o $(LIBS)
 
 hostmp3.so:	hostmp3.o
 	$(CC) -shared -o libhostmp3.so hostmp3.o $(LIBS)
@@ -35,8 +41,14 @@ hostavi.so: hostavi.o
 metadata.so: metadata.o
 	$(CC) -shared -o libmetadata.so metadata.o $(LIBS)
 
-exe: $(path)/main.cpp 
-	$(CC) -o exe $(path)/main.cpp -lhostsrc -lhostmp3 -lhostwebm -lhostavi -lmetadata $(LIBS) -I $(header) -L .
+padprobe.so: padprobe.o 
+	$(CC) -shared -o libpadprobe.so padprobe.o $(LIBS)
+
+keyboard.so: keyboardhandler.o 
+	$(CC) -shared -o libkeyboard.so keyboardhandler.o metadata.o $(LIBS)
+
+exe: main/main.cpp 
+	$(CC) -o exe main/main.cpp -lhostmp4 -lhostmp3 -lhostwebm -lhostavi -lmetadata -lpadprobe -lkeyboard $(LIBS) -I $(header) -L .
 
 clean:
 	rm -rf *.o *.so exe
