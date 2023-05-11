@@ -3,7 +3,7 @@ path = src
 header = ./include/
 LIBS = `pkg-config --cflags --libs gstreamer-1.0 gstreamer-pbutils-1.0`
 
-all: hostmp4.o hostmp3.o hostwebm.o hostavi.o metadata.o padprobe.o keyboardhandler.o hostmp4.so hostmp3.so hostwebm.so hostavi.so metadata.so padprobe.so keyboard.so exe
+all: hostmp4.o hostmp3.o hostwebm.o hostavi.o metadata.o padprobe.o keyboardhandler.o demo.o thumbnail.o img_server.o hostmp4.so hostmp3.so hostwebm.so hostavi.so metadata.so padprobe.so keyboard.so demo.so thumbnail.so img_server.so exe
 
 hostmp4.o: $(path)/hostmp4.cpp
 	$(CC) -c $(path)/hostmp4.cpp $(LIBS) -fPIC -I $(header)
@@ -26,6 +26,15 @@ padprobe.o: $(path)/padprobe.cpp
 keyboardhandler.o: $(path)/keyboardhandler.cpp
 	$(CC) -c $(path)/keyboardhandler.cpp $(LIBS) -fPIC -I $(header)
 
+demo.o:	$(path)/demo.cpp
+	$(CC) -c $(path)/demo.cpp $(LIBS) -fPIC -I $(header)
+
+thumbnail.o: $(path)/thumbnail.cpp
+	$(CC) -c $(path)/thumbnail.cpp $(LIBS) -fPIC -I $(header)
+
+img_server.o: $(path)/img_server.cpp
+	$(CC) -c $(path)/img_server.cpp $(LIBS) -fPIC -I $(header)
+
 hostmp4.so:	hostmp4.o
 	$(CC) -shared -o libhostmp4.so hostmp4.o $(LIBS)
 
@@ -47,8 +56,17 @@ padprobe.so: padprobe.o
 keyboard.so: keyboardhandler.o 
 	$(CC) -shared -o libkeyboard.so keyboardhandler.o metadata.o $(LIBS)
 
+demo.so: demo.o
+	$(CC) -shared -o libdemo.so demo.o $(LIBS)
+
+thumbnail.so: thumbnail.o
+	$(CC) -shared -o libthumbnail.so thumbnail.o $(LIBS)
+
+img_server.so: img_server.o
+	$(CC) -shared -o libimg_server.so img_server.o $(LIBS)
+
 exe: main/main.cpp 
-	$(CC) -o exe main/main.cpp -lhostmp4 -lhostmp3 -lhostwebm -lhostavi -lmetadata -lpadprobe -lkeyboard $(LIBS) -I $(header) -L .
+	$(CC) -o exe main/main.cpp -lhostmp4 -lhostmp3 -lhostwebm -lhostavi -lmetadata -lpadprobe -lkeyboard -ldemo -lthumbnail -limg_server $(LIBS) -I $(header) -L .
 
 clean:
-	rm -rf *.o *.so exe
+	rm -rf *.o *.so exe *.jpg
